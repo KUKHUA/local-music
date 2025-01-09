@@ -66,18 +66,18 @@ class jukeBoxPlayer {
             this.songCollection = globalSongSystem;
             
             // Verify songList exists and has songs
-            if (this.songCollection?.songList?.length > 0) {
-                await this.playSong();
-            } else {
+            if (!this.songCollection?.songList?.length > 0)
                 this.statusMessage.innerText = "No songs available";
-            }
+
         } catch (err) {
             console.error('Failed to initialize player:', err);
             this.statusMessage.innerText = "Failed to initialize player";
         }
     }
 
-    async playSong(){
+    async play(){
+        if(!this.audio.paused)
+            this.audio.pause();
         this.songData = await this.songCollection.getRandomSong(); 
         this.audio.src = this.songData.song;
 
@@ -95,7 +95,8 @@ class jukeBoxPlayer {
         this.audio.play();
     }
 
-    async nextSong() {
-        await this.playSong();
+    async pause(){
+        this.audio.pause();
     }
+
 }

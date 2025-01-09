@@ -16,6 +16,12 @@
         <script src="../lib/jsmediatags.js"></script>
         <script src="../lib/filelib.js"></script>
 
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var juke = new jukeBoxPlayer('coverImage','statusMessage');
+            });
+        </script>
+
     </head>
     <body>
         <div class="navbar-menu has-background-black p-2 is-active" style="border-radius: 1em;">
@@ -55,7 +61,7 @@
                     <h1 class="title is-3" id="statusMessage">No Music Playing..</h1>
 
                     <button class="button is-size-3 mx-2 is-responsive has-hover is-primary"
-                    onclick=" a = new jukeBoxPlayer('coverImage','statusMessage');">
+                    onclick="if(juke) juke.play();">
                         <a class="material-symbols-outlined mr-1 has-text-primary-dark">shuffle</a>
                     </button> 
 
