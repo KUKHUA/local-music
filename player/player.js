@@ -46,7 +46,7 @@ class jukeBoxPlayer {
     setupEventListeners() {
         this.audio.addEventListener('ended', () => {
             this.statusMessage.innerText = "Playing next song...";
-            this.nextSong();
+            this.play();
         });
 
         this.audio.addEventListener('pause', () => {
@@ -55,7 +55,7 @@ class jukeBoxPlayer {
 
         this.audio.addEventListener('error', () => {
             this.statusMessage.innerText = "Error playing song, skipping...";
-            this.nextSong();
+            this.play();
         });
     }
 
@@ -77,6 +77,7 @@ class jukeBoxPlayer {
     async play(){
         if(!this.audio.paused)
             this.audio.pause();
+        
         this.songData = await this.songCollection.getRandomSong(); 
         this.audio.src = this.songData.song;
 
