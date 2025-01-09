@@ -41,11 +41,20 @@ class songSystem{
             
             let cover = null;
             if (tag.tags.picture) {
-                cover = new Blob([tag.tags.picture.data], {type: tag.tags.picture.format});
-                let coverFile = await this.songFS.createFile(`${id}_cover.${tag.tags.picture.format}`, cover);
-                cover = `${id}_cover.${tag.tags.picture.format}`;
+                let binaryString = "";
+                for (let i = 0; i < tag.tags.picture.data.length; i++) {
+                    binaryString += String.fromCharCode(tag.tags.picture.data[i]);
+                }
+                let base64String = btoa(binaryString);
+                let byteCharacters = atob(base64String);
+                let byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                let byteArray = new Uint8Array(byteNumbers);
+                cover = new Blob([byteArray], {type: tag.tags.picture.format});
             }
-
+            
             let newSong = new song(tag.tags?.title, tag.tags?.artist, tag.tags?.album, tag.tags?.year, tag.tags?.genre, tag.tags?.track, cover, songFile);
             console.log(newSong.toJSON());
             this.songList.push(newSong.toJSON());
@@ -95,14 +104,14 @@ class songSystem{
             let coverFile = await this.songFS.getFile(song.cover);
             coverFile = await coverFile.getBlob();
             coverFile = URL.createObjectURL(coverFile);
-            return {song: songFile, cover: coverFile};
+            return {song: songFile, cover: coverFile, title: song.title, artist: song.artist};
         } else if (!(song.cover) && song.artist && song.title){
             let cover = await this.generatePlaceHolderCover(song.title, song.artist);
             cover = URL.createObjectURL(cover);
             return {song: songFile, cover: cover,title: song.title, artist: song.artist};
         }
 
-        return {song: songFile};
+        return {song: songFile, cover: null, title: song.title, artist: song.artist};
     }
 
 }
