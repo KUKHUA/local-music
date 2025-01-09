@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>local-player</title>
+        <link rel="stylesheet" href="lib/bulma.min.css">
+        <script src="assets/script/songSystem.js"></script>
+        <script src="lib/filelib.js"></script>
+        <script src="assets/script/util.js"></script>
+        <script>
+            async function redirect() {
+                window.songCollection = new songSystem();
+                await songCollection.init();
+                if(songCollection.songFS.hasFile('songList.json')){
+                    let songList = await songCollection.songFS.getFile('songList.json');
+                    songList = await songList.getBlob();
+                    songList = JSON.parse(await songList.text());
+                    if(songList.length > 0){
+                        goTo('player/');
+                    } else {
+                        goTo('import/');
+                    }
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', redirect);
+        </script>
+    </head>
+    <body>
+
+        <section class="section">
+                <div class="container">
+                    <div class="columns is-centered">
+                        <div class="column is-half">
+                            <h1 class="title is-1"> Please <a href="player/">click here</a> if you are not 
+                                automanitcaly redriected.</h1>
+                        </div>
+                    </div>
+                </div>
+        </section>
+
+    </body>
+</html>

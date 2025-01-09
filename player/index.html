@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>local-player</title>
+
+        <link rel="stylesheet" href="../lib/bulma.min.css">
+        <link rel="stylesheet" href="../assets/css/index.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"/>
+
+        <script src="../assets/script/util.js"></script>
+        <script src="../assets/script/songSystem.js"></script>
+        <script src="player.js"></script>
+        
+        <script src="../lib/jsmediatags.js"></script>
+        <script src="../lib/filelib.js"></script>
+
+    </head>
+    <body>
+        <div class="navbar-menu has-background-black p-2 is-active" style="border-radius: 1em;">
+            <div class="navbar-start is-hidden-mobile">
+                <h1 class="title is-2 ml-3 mt-1">local-player</h1>
+            </div>
+
+            <div>
+
+                <button style="border-radius: 1em;" class="button has-text-grey-lighter is-size-5
+                has-background-grey-darker mx-2 is-responsive is-active has-hover" onclick="goTo('../import/');">
+                    <a class="material-symbols-outlined mr-1">upload</a> Import Music
+                </button>
+
+                <button style="border-radius: 1em;" class="button has-text-grey-lighter is-size-5
+                has-background-grey-dark mx-2 is-responsive has-hover" onclick="refresh();">
+                    <a class="material-symbols-outlined mr-1">music_note</a> Player
+                </button>
+
+            </div>
+
+
+            <div class="navbar-end">
+
+                <button style="border-radius: 1em;" class="button has-text-grey-lighter is-size-5
+               mx-2 is-outlined is-responsive has-hover is-hidden-mobile">
+                    <a class="material-symbols-outlined mr-1">open_in_new</a> Open Always-On-Top Player
+                </button>
+
+            </div>
+        </div>
+
+        <section class="section" id="addNew">
+            <div class="container">
+                <div class="columns is-centered">
+                <div class="column is-half box has-text-centered" id="songImportArea">
+                    <h1 class="title is-3" id="statusMessage">No Music Playing..</h1>
+
+                    <button class="button is-size-3 mx-2 is-responsive has-hover is-primary"
+                    onclick=" a = new jukeBoxPlayer('statusMessage','statusMessage');">
+                        <a class="material-symbols-outlined mr-1 has-text-primary-dark">shuffle</a>
+                    </button> 
+
+                    <figure class="image is-square box mt-2 hideme" style="width: 50%; margin: 0 auto;">
+                        <img src=""/ style="border-radius: 1em;">
+                    </figure>
+                </div>
+                </div>
+            </div>
+        </section>
+
+    </body>
+</html>
