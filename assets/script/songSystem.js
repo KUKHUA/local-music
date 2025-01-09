@@ -41,20 +41,13 @@ class songSystem{
             
             let cover = null;
             if (tag.tags.picture) {
-                let binaryString = "";
-                for (let i = 0; i < tag.tags.picture.data.length; i++) {
-                    binaryString += String.fromCharCode(tag.tags.picture.data[i]);
-                }
-                let base64String = btoa(binaryString);
-                let byteCharacters = atob(base64String);
-                let byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                let byteArray = new Uint8Array(byteNumbers);
-                cover = new Blob([byteArray], {type: tag.tags.picture.format});
+                //Convert byte array to blob & write to filesystem
+                let coverBlob = new Blob([tag.tags.picture.data], {type: tag.tags.picture.format});
+                let coverID = crypto.randomUUID();
+                cover = await this.songFS.createFile(`${coverID}.${tag.tags.picture.format}`, coverBlob);
+                cover = `${coverID}.${tag.tags.picture.format}`;
             }
-            
+
             let newSong = new song(tag.tags?.title, tag.tags?.artist, tag.tags?.album, tag.tags?.year, tag.tags?.genre, tag.tags?.track, cover, songFile);
             console.log(newSong.toJSON());
             this.songList.push(newSong.toJSON());
