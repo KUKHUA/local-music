@@ -99,7 +99,7 @@ class songSystem{
         } else if (!(song.cover) && song.artist && song.title){
             let cover = await this.generatePlaceHolderCover(song.title, song.artist);
             cover = URL.createObjectURL(cover);
-            return {song: songFile, cover: cover};
+            return {song: songFile, cover: cover,title: song.title, artist: song.artist};
         }
 
         return {song: songFile};

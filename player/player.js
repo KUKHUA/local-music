@@ -1,29 +1,50 @@
+// Create a single global instance
+let globalSongSystem;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    window.songCollection = new songSystem();
-    await window.songCollection.init();
-    songImportArea = document.getElementById('songImportArea');
-    songImportArea.addEventListener('dragover', eventStuff);
-    songImportArea.addEventListener('drop', eventStuff);
-    songImportArea.addEventListener('dragenter', eventStuff);
-    songImportArea.addEventListener('dragleave', eventStuff);
+    try {
+        // Initialize once
+        globalSongSystem = new songSystem();
+        await globalSongSystem.init();
+        window.songCollection = globalSongSystem;
+        
+        songImportArea = document.getElementById('songImportArea');
+        songImportArea.addEventListener('dragover', eventStuff);
+        songImportArea.addEventListener('drop', eventStuff);
+        songImportArea.addEventListener('dragenter', eventStuff);
+        songImportArea.addEventListener('dragleave', eventStuff);
+    } catch (err) {
+        console.error('Failed to initialize song system:', err);
+    }
 
     async function eventStuff(e){
         e.preventDefault();
         e.stopPropagation();
-
         e.dataTransfer.dropEffect = 'copy';
-
-        // For each file in the DataTransfer object
-        for (let file of e.dataTransfer.files) {
-            await songCollection.importSong(await file.arrayBuffer(), file.type);
+        
+        try {
+            for (let file of e.dataTransfer.files) {
+                await globalSongSystem.importSong(await file.arrayBuffer(), file.type);
+            }
+        } catch (err) {
+            console.error('Failed to import song:', err);
         }
     }
 });
 
 class jukeBoxPlayer {
-    constructor(coverImageID,statusMessageID){
+    constructor(coverImageID, statusMessageID){
         this.audio = new Audio();
+        this.coverImage = document.getElementById(coverImageID); 
+        this.statusMessage = document.getElementById(statusMessageID);
+        this.songData = null;
+        this.songCollection = null;
+
+        this.setupEventListeners();
+        this.init();
+    }
+
+    setupEventListeners() {
         this.audio.addEventListener('ended', () => {
             this.statusMessage.innerText = "Playing next song...";
             this.nextSong();
@@ -37,33 +58,44 @@ class jukeBoxPlayer {
             this.statusMessage.innerText = "Error playing song, skipping...";
             this.nextSong();
         });
-
-        this.coverImage = document.getElementById(coverImageID);
-        this.statusMessage = document.getElementById(statusMessageID);
-        this.songData = null;
-
-        this.init();
     }
 
-    async init(){
-        this.songCollection = window.songCollection;
+    async init() {
+        try {
+            // Use existing global instance
+            this.songCollection = globalSongSystem;
+            
+            // Verify songList exists and has songs
+            if (this.songCollection?.songList?.length > 0) {
+                await this.playSong();
+            } else {
+                this.statusMessage.innerText = "No songs available";
+            }
+        } catch (err) {
+            console.error('Failed to initialize player:', err);
+            this.statusMessage.innerText = "Failed to initialize player";
+        }
     }
 
     async playSong(){
-        songData = await this.songCollection.getRandomSong();
-        this.audio.src = songData.song;
+        this.songData = await this.songCollection.getRandomSong(); 
+        this.audio.src = this.songData.song;
 
-        if(songData.cover)
-            this.coverImage.src = songData.cover;
+        if(this.songData.cover)
+            this.coverImage.src = this.songData.cover;
         else
-            this.coverImage.src = "assets/images/placeholder.webp";
+            this.coverImage.src = "../assets/images/placeholder.webp"; 
 
         if(this.coverImage.classList.contains('hideme'))
-            this.coverImage.classList.add('show');
+            this.coverImage.classList.remove('hideme'); 
         else if(this.coverImage.style.display == 'none')
             this.coverImage.style.display = 'block';
 
-        this.statusMessage.innerText = `Playing ${songData.title} by ${songData.artist}`;
+        this.statusMessage.innerText = `Playing ${this.songData.title || 'Unknown'} by ${this.songData.artist || 'Unknown'}`;
         this.audio.play();
+    }
+
+    async nextSong() {
+        await this.playSong();
     }
 }
