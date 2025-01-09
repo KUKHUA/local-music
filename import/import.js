@@ -1,6 +1,7 @@
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     var songCollection = new songSystem();
+    await songCollection.init();
     songImportArea = document.getElementById('songImportArea');
     songImportArea.addEventListener('dragover', eventStuff);
     songImportArea.addEventListener('drop', eventStuff);

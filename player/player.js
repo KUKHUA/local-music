@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Initialize once
         globalSongSystem = new songSystem();
         await globalSongSystem.init();
-        window.songCollection = globalSongSystem;
         
         songImportArea = document.getElementById('songImportArea');
         songImportArea.addEventListener('dragover', eventStuff);

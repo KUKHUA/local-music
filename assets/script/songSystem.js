@@ -1,7 +1,6 @@
 class songSystem{
     constructor(){
         this.songList = [];
-        this.init();
     }
 
     async init(){
