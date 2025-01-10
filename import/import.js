@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (let file of e.dataTransfer.files) {
             await songCollection.importSong(await file.arrayBuffer(), file.type);
         }
+        alert(`Imported ${e.dataTransfer.files.length} files successfully!`);
     }
 
     let fileUpload = document.createElement('input');
@@ -28,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (let file of fileUpload.files) {
             await songCollection.importSong(file, file.type);
         }
+        alert(`Imported ${fileUpload.files.length} files successfully!`);
     });
 
     songImportArea.addEventListener('click', () => {

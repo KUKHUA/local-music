@@ -24,6 +24,14 @@
 
     </head>
     <body>
+        <div class="modal" id="pipModal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <h1 class="title is-1">You are in PIP mode.</h1>
+                <button onclick="juke.alwaysOnTop();" class="button is-primary is-responsive mx-2">Press to exit.</button>
+            </div>
+          </div>
+
         <div class="navbar-menu has-background-black p-2 is-active" style="border-radius: 1em;">
             <div class="navbar-start is-hidden-mobile">
                 <h1 class="title is-2 ml-3 mt-1">local-player</h1>
@@ -45,16 +53,15 @@
 
 
             <div class="navbar-end">
-
-                <button style="border-radius: 1em;" class="button has-text-grey-lighter is-size-5
-               mx-2 is-outlined is-responsive has-hover is-hidden-mobile">
+                <button id="pipButton" style="border-radius: 1em;" class="button has-text-grey-lighter is-size-5
+               mx-2 is-outlined is-responsive has-hover is-hidden-mobile" onclick="juke.alwaysOnTop();">
                     <a class="material-symbols-outlined mr-1">open_in_new</a> Open Always-On-Top Player
                 </button>
 
             </div>
         </div>
 
-        <section class="section" id="addNew">
+        <section class="section" id="playerArea">
             <div class="container">
                 <div class="columns is-centered">
                 <div class="column is-half box has-text-centered" id="songImportArea">
@@ -65,9 +72,25 @@
                         <a class="material-symbols-outlined mr-1 has-text-primary-dark">shuffle</a>
                     </button> 
 
-                    <figure class="image is-square box mt-2" style="width: 50%; margin: 0 auto;">
+                    <figure class="image is-square box mt-2" style="max-width: 50%; margin: 0 auto;">
                         <img src="" id="coverImage" class="hideme" style="border-radius: 1em;">
                     </figure>
+
+                    <button class="button is-size-4 mx-2 mt-2 is-responsive has-hover is-info"
+                    onclick="juke.previousTrack();">
+                        <a class="material-symbols-outlined mr-1 has-text-primary-dark">skip_previous</a>
+                    </button> 
+
+                    <button class="button is-size-4 mx-2 mt-2 is-responsive has-hover is-info"
+                    onclick="juke.pause('pauseButton');">
+                        <a id="pauseButton" class="material-symbols-outlined mr-1 has-text-primary-dark">pause</a>
+                    </button> 
+
+                    <button class="button is-size-4 mx-2 mt-2 is-responsive has-hover is-info"
+                    onclick="juke.nextTrack();">
+                        <a class="material-symbols-outlined mr-1 has-text-primary-dark">skip_next</a>
+                    </button> 
+
                 </div>
                 </div>
             </div>

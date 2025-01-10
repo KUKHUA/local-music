@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         globalSongSystem = new songSystem();
         await globalSongSystem.init();
         
-        songImportArea = document.getElementById('songImportArea');
+        songImportArea = document.getElementById('playerArea');
         songImportArea.addEventListener('dragover', eventStuff);
         songImportArea.addEventListener('drop', eventStuff);
         songImportArea.addEventListener('dragenter', eventStuff);
@@ -28,7 +28,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (err) {
             console.error('Failed to import song:', err);
         }
+        
+        alert(`Imported ${e.dataTransfer.files.length} files successfully!`);
     }
+
+    if(!window.documentPictureInPicture)
+        document.getElementById('pipButton').innerText = "Not supported";
 });
 
 class jukeBoxPlayer {
@@ -41,6 +46,9 @@ class jukeBoxPlayer {
 
         this.setupEventListeners();
         this.init();
+
+        this.songHistory = [];
+        this.currentHistoryIndex = -1;
     }
 
     setupEventListeners() {
@@ -50,12 +58,35 @@ class jukeBoxPlayer {
         });
 
         this.audio.addEventListener('pause', () => {
-            this.statusMessage.innerText = "Paused";
+            this.statusMessage.innerText += " - Paused";
         });
 
         this.audio.addEventListener('error', () => {
             this.statusMessage.innerText = "Error playing song, skipping...";
             this.play();
+        });
+
+        document.body.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                e.stopPropagation();
+                this.pause('pauseButton');
+            }
+
+            if (e.code === 'ArrowRight') {
+                e.preventDefault();
+                this.nextTrack();
+            }
+
+            if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                this.previousTrack();
+            }
+
+            if (e.code === 'ArrowDown') {
+                e.preventDefault();
+                this.pause('pauseButton');
+            }
         });
     }
 
@@ -74,11 +105,53 @@ class jukeBoxPlayer {
         }
     }
 
+    setupMediaSession(title,artist,album,cover){
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: title || 'Unknown',
+            artist: artist || 'Unknown',
+            album: album || 'Unknown',
+            artwork: [{src: cover || '../assets/images/placeholder.webp', sizes: '512x512', type: 'image/jpeg'}]
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => this.play());
+        navigator.mediaSession.setActionHandler('pause', () => this.pause());
+        navigator.mediaSession.setActionHandler('stop', () => this.pause());
+    }
+
+
     async play(){
         if(!this.audio.paused)
             this.audio.pause();
         
         this.songData = await this.songCollection.getRandomSong(); 
+        this.audio.src = this.songData.song;
+
+        if(this.songData){
+            this.songHistory.push(this.songData);
+            this.currentHistoryIndex++;
+        }
+
+        if(this.songData.cover)
+            this.coverImage.src = this.songData.cover;
+        else
+            this.coverImage.src = "../assets/images/placeholder.webp"; 
+
+        if(this.coverImage.classList.contains('hideme'))
+            this.coverImage.classList.remove('hideme'); 
+        else if(this.coverImage.style.display == 'none')
+            this.coverImage.style.display = 'block';
+
+        this.statusMessage.innerText = `Playing ${this.songData.title || 'Unknown'} by ${this.songData.artist || 'Unknown'}`;
+
+        this.setupMediaSession(this.songData.title, this.songData.artist, this.songData.album, this.songData.cover);
+        this.audio.play();
+    }
+
+    async playTrack(songData){
+        if(!this.audio.paused)
+            this.audio.pause();
+        
+        this.songData = songData;
         this.audio.src = this.songData.song;
 
         if(this.songData.cover)
@@ -92,11 +165,84 @@ class jukeBoxPlayer {
             this.coverImage.style.display = 'block';
 
         this.statusMessage.innerText = `Playing ${this.songData.title || 'Unknown'} by ${this.songData.artist || 'Unknown'}`;
+
+        this.setupMediaSession(this.songData.title, this.songData.artist, this.songData.album, this.songData.cover);
         this.audio.play();
     }
 
-    async pause(){
-        this.audio.pause();
+    async pause(icon){
+        if(this.audio.paused){
+            this.audio.play();
+            this.setupMediaSession(this.songData.title, this.songData.artist, this.songData.album, this.songData.cover);
+            this.statusMessage.innerText = `Playing ${this.songData.title || 'Unknown'} by ${this.songData.artist || 'Unknown'}`;
+        }
+        else
+            this.audio.pause();
+
+        
+        const iconElement = document.getElementById(icon);
+        if (iconElement) {
+            if(iconElement.innerText == "pause")
+                iconElement.innerText = "play_arrow";
+            else
+                iconElement.innerHTML = "pause";
+        }
+    }
+
+    async nextTrack(){
+        // check if the user wants to get a new random song
+        if (this.songHistory.length === 0 || this.currentHistoryIndex >= this.songHistory.length - 1) {
+            await this.play();
+            return;
+        } else {
+            // Go forward one track in history
+            this.currentHistoryIndex++;
+            this.songData = this.songHistory[this.currentHistoryIndex];
+            await this.playTrack(this.songData);
+        }
+
+    }
+
+    async previousTrack(){
+        if (this.songHistory.length === 0 || this.currentHistoryIndex <= 0) {
+            // No previous tracks, just play a new random song
+            await this.play();
+            return;
+        }
+
+        // Go back one track in history
+        this.currentHistoryIndex--;
+        this.songData = this.songHistory[this.currentHistoryIndex];
+
+        await this.playTrack(this.songData);
+    }
+
+    async alwaysOnTop(copyElm,pipMessage){
+        if(!window.documentPictureInPicture)
+            alert('Sorry, your browser does not support Picture in Picture mode');
+
+        if (window.documentPictureInPicture.window) {
+            window.documentPictureInPicture.window.close();
+            if(document.getElementById('pipMessage'))
+                document.getElementById('pipMessage').classList.remove('is-active');
+            return;
+        }
+
+        let toCopy = document.getElementById(copyElm);
+        let scripts = document.querySelectorAll('script');
+        let styles = document.querySelectorAll('link[rel="stylesheet"]');
+        const pipWindow = await window.documentPictureInPicture.requestWindow({
+            width: 400,
+            height: 400,
+        });
+
+        scripts.forEach(script => pipWindow.document.body.appendChild(script));
+        styles.forEach(style => pipWindow.document.head.appendChild(style));
+        pipWindow.document.body.appendChild(toCopy);
+
+        if(document.getElementById(pipMessage))
+            document.getElementById(pipMessage).classList.add('is-active');
+        
     }
 
 }
