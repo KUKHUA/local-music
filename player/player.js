@@ -217,32 +217,38 @@ class jukeBoxPlayer {
         await this.playTrack(this.songData);
     }
 
-    async alwaysOnTop(copyElm,pipMessage){
-        if(!window.documentPictureInPicture)
-            alert('Sorry, your browser does not support Picture in Picture mode');
-
-        if (window.documentPictureInPicture.window) {
-            window.documentPictureInPicture.window.close();
-            if(document.getElementById('pipMessage'))
-                document.getElementById('pipMessage').classList.remove('is-active');
-            return;
-        }
-
-        let toCopy = document.getElementById(copyElm);
-        let scripts = document.querySelectorAll('script');
-        let styles = document.querySelectorAll('link[rel="stylesheet"]');
-        const pipWindow = await window.documentPictureInPicture.requestWindow({
-            width: 400,
-            height: 400,
-        });
-
-        scripts.forEach(script => pipWindow.document.body.appendChild(script));
-        styles.forEach(style => pipWindow.document.head.appendChild(style));
-        pipWindow.document.body.appendChild(toCopy);
-
-        if(document.getElementById(pipMessage))
-            document.getElementById(pipMessage).classList.add('is-active');
-        
+async alwaysOnTop(pipMessage) {
+    if (!window.documentPictureInPicture) {
+        alert('Sorry, your browser does not support Picture in Picture mode');
+        return;
     }
+
+    if (window.documentPictureInPicture.window) {
+        window.documentPictureInPicture.window.close();
+        if (document.getElementById(pipMessage))
+            document.getElementById(pipMessage).classList.remove('is-active');
+        return;
+    }
+
+    const pipWindow = await window.documentPictureInPicture.requestWindow({
+        width: 400,
+        height: 400,
+    });
+
+    theFrame = pipWindow.document.createElement('iframe');
+    theFrame.src = window.location.href;
+    theFrame.style.width = '100%';
+    theFrame.style.height = '100%';
+    theFrame.style.border = 'none';
+    pipWindow.document.body.appendChild(theFrame);
+
+    pipWindow.addEventListener('close', () => {
+        if (document.getElementById(pipMessage))
+            document.getElementById(pipMessage).classList.remove('is-active');
+    });
+
+    if (document.getElementById(pipMessage))
+        document.getElementById(pipMessage).classList.add('is-active');
+}
 
 }
