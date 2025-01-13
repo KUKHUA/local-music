@@ -235,7 +235,7 @@ async alwaysOnTop(pipMessage) {
         height: 400,
     });
 
-    theFrame = pipWindow.document.createElement('iframe');
+    let theFrame = pipWindow.document.createElement('iframe');
     theFrame.src = window.location.href;
     theFrame.style.width = '100%';
     theFrame.style.height = '100%';
