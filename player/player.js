@@ -36,8 +36,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Parse query parameters
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('miniplayer') === 'true') {
-        document.getElementById('navDiv').classList.add('hideme');
-        document.getElementById('coverBox').classList.add('hideme');
+        document.getElementById('navDiv').remove();
+        document.getElementById('coverBox').remove();
+        document.getElementById('shuffleButton').remove();
     }
 });
 
