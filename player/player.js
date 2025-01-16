@@ -103,7 +103,7 @@ class jukeBoxPlayer {
             // wait 5ms to allow the song collection to be populated
             // this is not a good way to solve this problem.
             // TODO: have a boolean flag that is set when the song collection is populated
-            await new Promise(resolve => setTimeout(resolve, 5));
+            await new Promise(resolve => setTimeout(resolve, 500));
 
             if (!this.songCollection?.songList[0])
                 this.statusMessage.innerText = "No songs available";
