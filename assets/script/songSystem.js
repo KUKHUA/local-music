@@ -1,6 +1,7 @@
 class songSystem{
     constructor(){
         this.songList = [];
+        this.lrcAPI = new URL('https://lrclib.net/api/get')
     }
 
     async init(){
@@ -57,7 +58,9 @@ class songSystem{
                     }
                 }
 
-                let newSong = new song(tag.tags?.title, tag.tags?.artist, tag.tags?.album, tag.tags?.year, tag.tags?.genre, tag.tags?.track, cover, songFile);
+                let lyrics = await this.searchForLyrics(tag.tags.title, tag.tags.artist, tag.tags.album);
+
+                let newSong = new song(tag.tags?.title, tag.tags?.artist, tag.tags?.album, tag.tags?.year, tag.tags?.genre, tag.tags?.track, cover, songFile, lyrics);
                 this.songList.push(newSong.toJSON());
                 this.writeSongList();
                 if(updateProgressMessage && tag.tags?.title && tag.tags?.artist)
@@ -116,20 +119,57 @@ class songSystem{
             let coverFile = await this.songFS.getFile(song.cover);
             coverFile = await coverFile.getBlob();
             coverFile = URL.createObjectURL(coverFile);
-            return {song: songFile, cover: coverFile, title: song.title, artist: song.artist};
+            return {song: songFile, cover: coverFile, title: song.title, artist: song.artist, lyrics: song.lyrics};
         } else if (!(song.cover) && song.artist && song.title){
-            let cover = await this.generatePlaceHolderCover(song.title, song.artist);
+            let cover = await this.generatePlaceHolderCover(song.title, song.artist, lyrics);
             cover = URL.createObjectURL(cover);
-            return {song: songFile, cover: cover,title: song.title, artist: song.artist};
+            return {song: songFile, cover: cover,title: song.title, artist: song.artist, lyrics: song.lyrics};
         }
 
-        return {song: songFile, cover: null, title: song.title, artist: song.artist};
+        return {song: songFile, cover: null, title: song.title, artist: song.artist, lyrics: song.lyrics};
+    }
+
+    async searchForLyrics(title,artist,album,duration){
+        try {
+            if(!title || !artist)
+                throw new Error(`You must provide at least a title and artist to search for lyrics`);
+
+            let searchParams = new URLSearchParams();
+            searchParams.set('track_name',title);
+            searchParams.set('artist_name',artist);
+            if(album) searchParams.set('album_name',album);
+            if(duration) searchParams.set('duration',duration);
+
+
+            let searchURL = this.lrcAPI;
+            searchURL.search = searchParams;
+    
+            let response = await fetch(searchURL,{
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Lrclib-Client': 'local-player (https://github.com/KUKHUA/local-music)'
+                }
+            });
+            if(!response.ok)
+                throw new Error(`Failed to fetch lyrics: ${response.status} ${response.statusText}`);
+
+            response = await response.json();
+            if(!response.syncedLyrics)
+                throw new Error(`No synced lyrics found ${response}`);
+            else
+                return response.syncedLyrics;
+
+        } catch (e){
+            console.log(`Unable to find lyrics for ${title}`, e);
+        }
     }
 
 }
 
 class song{
-    constructor(title, artist, album, year, genre, track, cover, file){
+    constructor(title, artist, album, year, genre, track, cover, file, lyrics){
         this.title = title;
         this.artist = artist;
         this.album = album;
@@ -138,6 +178,8 @@ class song{
         this.track = track;
         this.cover = cover;
         this.file = file;
+        if(lyrics)
+            this.lyrics = lyrics;
     }
     toJSON(){
         return {
@@ -148,7 +190,8 @@ class song{
             genre: this.genre,
             track: this.track,
             cover: this.cover,
-            file: this.file
+            file: this.file,
+            lyrics: this.lyrics
         }
     }
 }

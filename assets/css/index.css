@@ -51,3 +51,32 @@
     height: 100vh;
     z-index: -1;
 }
+
+@keyframes ambientColors {
+    0% { color: #ff6b6b; }
+    25% { color: #4ecdc4; }
+    50% { color: #45b7d1; }
+    75% { color: #96c93d; }
+    100% { color: #ff6b6b; }
+}
+
+@keyframes pulseZoom {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+}
+
+.is-lyric {
+    overflow-y: auto;
+    text-align: center;
+    margin: 0 auto;
+    max-width: 40vw;
+    max-height: 15vh;
+    font-size: 1.2em;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    animation: 
+        ambientColors 8s infinite,
+        pulseZoom 2s ease-in-out infinite;
+    text-shadow: 0 0 8px rgba(255,255,255,0.5);
+}

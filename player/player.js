@@ -55,6 +55,11 @@ class jukeBoxPlayer {
 
         this.songHistory = [];
         this.currentHistoryIndex = -1;
+        this.lyricsTimers = [];
+        this.lyricsStartTime = 0;
+        this.currentLyrics = [];
+        this.pausedTime = 0;
+        this.lyricText = document.getElementById('lyrics');
     }
 
     setupEventListeners() {
@@ -134,7 +139,7 @@ class jukeBoxPlayer {
         if(!this.audio.paused)
             this.audio.pause();
         this.resetCoverGray();
-        
+
         this.songData = await this.songCollection.getRandomSong(); 
         this.audio.src = this.songData.song;
 
@@ -143,20 +148,10 @@ class jukeBoxPlayer {
             this.currentHistoryIndex++;
         }
 
-        if(this.songData.cover)
-            this.coverImage.src = this.songData.cover;
-        else
-            this.coverImage.src = "../assets/images/placeholder.webp"; 
+        if(this.songData.lyrics)
+            this.startLyrics(this.songData.lyrics);
 
-        if(this.coverImage.classList.contains('hideme'))
-            this.coverImage.classList.remove('hideme'); 
-        else if(this.coverImage.style.display == 'none')
-            this.coverImage.style.display = 'block';
-
-        this.statusMessage.innerText = `Playing ${this.songData.title || 'Unknown'} by ${this.songData.artist || 'Unknown'}`;
-
-        this.setupMediaSession(this.songData.title, this.songData.artist, this.songData.album, this.songData.cover);
-        this.audio.play();
+        this.playTrack(this.songData);
     }
 
     async playTrack(songData){
@@ -167,6 +162,9 @@ class jukeBoxPlayer {
         this.songData = songData;
         this.audio.src = this.songData.song;
 
+        if(this.songData.lyrics)
+            this.startLyrics(this.songData.lyrics);
+
         if(this.songData.cover)
             this.coverImage.src = this.songData.cover;
         else
@@ -177,7 +175,7 @@ class jukeBoxPlayer {
         else if(this.coverImage.style.display == 'none')
             this.coverImage.style.display = 'block';
 
-        this.statusMessage.innerText = `Playing ${this.songData.title || 'Unknown'} by ${this.songData.artist || 'Unknown'}`;
+        this.statusMessage.innerText = `${this.songData.title || 'Unknown'} by ${this.songData.artist || 'Unknown'}`;
 
         this.setupMediaSession(this.songData.title, this.songData.artist, this.songData.album, this.songData.cover);
         this.audio.play();
@@ -187,10 +185,14 @@ class jukeBoxPlayer {
         if(this.audio.paused){
             this.audio.play();
             this.setupMediaSession(this.songData.title, this.songData.artist, this.songData.album, this.songData.cover);
-            this.statusMessage.innerText = `Playing ${this.songData.title || 'Unknown'} by ${this.songData.artist || 'Unknown'}`;
-        }
-        else
+            this.statusMessage.innerText = `${this.songData.title || 'Unknown'} by ${this.songData.artist || 'Unknown'}`;
+            if(this.songData.lyrics)
+                this.resumeLyrics();
+        } else {
             this.audio.pause();
+            if(this.songData.lyrics)
+                this.pauseLyrics();
+        }
 
         const coverImage = document.getElementById('coverImage');
         if(coverImage.classList.contains('is-gray'))
@@ -245,51 +247,110 @@ class jukeBoxPlayer {
             if(iconElement.innerText == "play_arrow")
                 iconElement.innerText = "pause";
         }
+        this.stopLyrics();
     }
 
-async alwaysOnTop(pipMessage) {
-    if (!window.documentPictureInPicture) {
-        alert('Sorry, your browser does not support Picture in Picture mode');
-        return;
+    startLyrics(lyrics) {
+        this.stopLyrics();
+        this.currentLyrics = [];
+        this.lyricsStartTime = Date.now();
+        
+        lyrics.split('\n').forEach(line => {
+            let time = line.match(/\[(\d+:\d+\.\d+)\]/);
+            if (time) {
+                let timeInSeconds = parseFloat(time[1].split(':')[0]) * 60 + parseFloat(time[1].split(':')[1]);
+                let lyricText = line.replace(time[0], '').trim();
+                this.currentLyrics.push({time: timeInSeconds * 1000, text: lyricText});
+            }
+        });
+
+        this.scheduleLyrics();
     }
 
-    if (window.documentPictureInPicture.window) {
-        window.documentPictureInPicture.window.close();
+    scheduleLyrics() {
+        if(!this.lyricTimers)
+            this.lyricTimers = [];
+        this.currentLyrics.forEach(lyric => {
+            let timer = setTimeout(() => {
+                this.displayLyric(lyric.text);
+            }, lyric.time);
+            this.lyricTimers.push(timer);
+        });
+    }
+
+    pauseLyrics() {
+        this.pausedTime = Date.now() - this.lyricsStartTime;
+        this.stopLyrics();
+    }
+
+    resumeLyrics() {
+        if (this.currentLyrics.length > 0) {
+            this.lyricsStartTime = Date.now() - this.pausedTime;
+            this.currentLyrics.forEach(lyric => {
+                let adjustedTime = Math.max(0, lyric.time - this.pausedTime);
+                let timer = setTimeout(() => {
+                    this.displayLyric(lyric.text);
+                }, adjustedTime);
+                this.lyricTimers.push(timer);
+            });
+        }
+    }
+
+    stopLyrics() {
+        if (this.lyricTimers) {
+            this.lyricTimers.forEach(timer => clearTimeout(timer));
+            this.lyricTimers = [];
+        }
+        this.lyricText.textContent = '';
+    }
+
+    displayLyric(lyric) {
+        this.lyricText.textContent = lyric;
+    }
+
+    async alwaysOnTop(pipMessage) {
+        if (!window.documentPictureInPicture) {
+            alert('Sorry, your browser does not support Picture in Picture mode');
+            return;
+        }
+
+        if (window.documentPictureInPicture.window) {
+            window.documentPictureInPicture.window.close();
+            if (document.getElementById(pipMessage))
+                document.getElementById(pipMessage).classList.remove('is-active');
+            return;
+        }
+
+        const pipWindow = await window.documentPictureInPicture.requestWindow({
+            width: 400,
+            height: 400,
+        });
+
+        this.pause('pauseButton');
+
+        let theFrame = pipWindow.document.createElement('iframe');
+        theFrame.src = window.location.href + '?miniplayer=true';
+        theFrame.style.position = 'absolute';
+        theFrame.style.top = '0';
+        theFrame.style.left = '0';
+        theFrame.style.width = '100%';
+        theFrame.style.height = '100%';
+        theFrame.style.border = 'none';
+        theFrame.style.margin = '0';
+        theFrame.style.padding = '0';
+        theFrame.style.overflow = 'hidden';
+        pipWindow.document.body.style.margin = '0';
+        pipWindow.document.body.style.padding = '0';
+        pipWindow.document.body.style.overflow = 'hidden';
+        pipWindow.document.body.appendChild(theFrame);
+
+        pipWindow.addEventListener('pagehide', () => {
+            if (document.getElementById(pipMessage))
+                document.getElementById(pipMessage).classList.remove('is-active');
+        });
+
         if (document.getElementById(pipMessage))
-            document.getElementById(pipMessage).classList.remove('is-active');
-        return;
+            document.getElementById(pipMessage).classList.add('is-active');
     }
-
-    const pipWindow = await window.documentPictureInPicture.requestWindow({
-        width: 400,
-        height: 400,
-    });
-
-    this.pause('pauseButton');
-
-    let theFrame = pipWindow.document.createElement('iframe');
-    theFrame.src = window.location.href + '?miniplayer=true';
-    theFrame.style.position = 'absolute';
-    theFrame.style.top = '0';
-    theFrame.style.left = '0';
-    theFrame.style.width = '100%';
-    theFrame.style.height = '100%';
-    theFrame.style.border = 'none';
-    theFrame.style.margin = '0';
-    theFrame.style.padding = '0';
-    theFrame.style.overflow = 'hidden';
-    pipWindow.document.body.style.margin = '0';
-    pipWindow.document.body.style.padding = '0';
-    pipWindow.document.body.style.overflow = 'hidden';
-    pipWindow.document.body.appendChild(theFrame);
-
-    pipWindow.addEventListener('pagehide', () => {
-        if (document.getElementById(pipMessage))
-            document.getElementById(pipMessage).classList.remove('is-active');
-    });
-
-    if (document.getElementById(pipMessage))
-        document.getElementById(pipMessage).classList.add('is-active');
-}
 
 }
