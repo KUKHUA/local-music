@@ -32,7 +32,7 @@
             </div>
           </div>
 
-        <div class="navbar-menu has-background-black p-2 is-active" style="border-radius: 1em;">
+        <div id="navDiv" class="navbar-menu has-background-black p-2 is-active" style="border-radius: 1em;">
             <div class="navbar-start is-hidden-mobile">
                 <h1 class="title is-2 ml-3 mt-1">local-player</h1>
             </div>
@@ -54,7 +54,7 @@
 
             <div class="navbar-end">
                 <button id="pipButton" style="border-radius: 1em;" class="button has-text-grey-lighter is-size-5
-               mx-2 is-outlined is-responsive has-hover is-hidden-mobile" onclick="juke.alwaysOnTop();">
+               mx-2 is-outlined is-responsive has-hover is-hidden-mobile" onclick="juke.alwaysOnTop('pipModal');">
                     <a class="material-symbols-outlined mr-1">open_in_new</a> Open Always-On-Top Player
                 </button>
 
@@ -64,7 +64,7 @@
         <section class="section" id="playerArea">
             <div class="container">
                 <div class="columns is-centered">
-                <div class="column is-half box has-text-centered" id="songImportArea">
+                <div class="column box has-text-centered" id="songImportArea">
                     <h1 class="title is-3" id="statusMessage">No Music Playing..</h1>
 
                     <button class="button is-size-3 mx-2 is-responsive has-hover is-primary"
@@ -72,7 +72,8 @@
                         <a class="material-symbols-outlined mr-1 has-text-primary-dark">shuffle</a>
                     </button> 
 
-                    <figure class="image is-square box mt-2" style="max-width: 50%; margin: 0 auto;">
+                    <figure id="coverBox" class="image is-square box mt-2 has-zoom" style="max-width: 35%; min-width: 10%; margin: 0 auto;"
+                    onclick="juke.nextTrack();">
                         <img src="" id="coverImage" class="hideme" style="border-radius: 1em;">
                     </figure>
 

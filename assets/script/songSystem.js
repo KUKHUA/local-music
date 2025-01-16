@@ -56,10 +56,12 @@ class songSystem{
                         cover = null;
                     }
                 }
-    
+
                 let newSong = new song(tag.tags?.title, tag.tags?.artist, tag.tags?.album, tag.tags?.year, tag.tags?.genre, tag.tags?.track, cover, songFile);
                 this.songList.push(newSong.toJSON());
                 this.writeSongList();
+                if(updateProgressMessage && tag.tags?.title && tag.tags?.artist)
+                    updateProgressMessage(`Imported ${tag.tags.title} by ${tag.tags.artist}`);
             },
             onError: (error) => {
                 console.error("Failed to read media tags:", error);

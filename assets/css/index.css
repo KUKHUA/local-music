@@ -18,3 +18,23 @@
     box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     cursor: pointer;
 }
+
+.has-zoom {
+    transition: all 0.3s;
+}
+
+.has-zoom:hover {
+    transform: scale(1.03);
+}
+
+.is-gray {
+    filter: grayscale(50%) brightness(70%);
+}
+
+.cut-overflow {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
+}

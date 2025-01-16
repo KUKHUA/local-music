@@ -8,10 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await globalSongSystem.init();
         
         songImportArea = document.getElementById('playerArea');
-        songImportArea.addEventListener('dragover', eventStuff);
         songImportArea.addEventListener('drop', eventStuff);
-        songImportArea.addEventListener('dragenter', eventStuff);
-        songImportArea.addEventListener('dragleave', eventStuff);
     } catch (err) {
         console.error('Failed to initialize song system:', err);
     }
@@ -19,7 +16,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function eventStuff(e){
         e.preventDefault();
         e.stopPropagation();
-        e.dataTransfer.dropEffect = 'copy';
+        if(e.dataTransfer.dropEffect)
+            e.dataTransfer.dropEffect = 'copy';
         
         try {
             for (let file of e.dataTransfer.files) {
@@ -34,6 +32,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if(!window.documentPictureInPicture)
         document.getElementById('pipButton').innerText = "Not supported";
+
+    // Parse query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('miniplayer') === 'true') {
+        document.getElementById('navDiv').classList.add('hideme');
+        document.getElementById('coverBox').classList.add('hideme');
+    }
 });
 
 class jukeBoxPlayer {
@@ -113,18 +118,21 @@ class jukeBoxPlayer {
             title: title || 'Unknown',
             artist: artist || 'Unknown',
             album: album || 'Unknown',
-            artwork: [{src: cover || '../assets/images/placeholder.webp', sizes: '512x512', type: 'image/jpeg'}]
+            artwork: [{src: cover, sizes: '512x512', type: 'image/jpeg'}]
         });
 
-        navigator.mediaSession.setActionHandler('play', () => this.play());
+        navigator.mediaSession.setActionHandler('play', () => this.pause());
         navigator.mediaSession.setActionHandler('pause', () => this.pause());
         navigator.mediaSession.setActionHandler('stop', () => this.pause());
+        navigator.mediaSession.setActionHandler('nexttrack', () => this.nextTrack());
+        navigator.mediaSession.setActionHandler('previoustrack', () => this.previousTrack());
     }
 
 
     async play(){
         if(!this.audio.paused)
             this.audio.pause();
+        this.resetCoverGray();
         
         this.songData = await this.songCollection.getRandomSong(); 
         this.audio.src = this.songData.song;
@@ -153,6 +161,7 @@ class jukeBoxPlayer {
     async playTrack(songData){
         if(!this.audio.paused)
             this.audio.pause();
+        this.resetCoverGray();
         
         this.songData = songData;
         this.audio.src = this.songData.song;
@@ -182,6 +191,11 @@ class jukeBoxPlayer {
         else
             this.audio.pause();
 
+        const coverImage = document.getElementById('coverImage');
+        if(coverImage.classList.contains('is-gray'))
+            coverImage.classList.remove('is-gray');
+        else
+            coverImage.classList.add('is-gray');
         
         const iconElement = document.getElementById(icon);
         if (iconElement) {
@@ -220,6 +234,18 @@ class jukeBoxPlayer {
         await this.playTrack(this.songData);
     }
 
+    resetCoverGray(){
+        const coverImage = document.getElementById('coverImage');
+        if(coverImage?.classList?.contains('is-gray'))
+            coverImage.classList.remove('is-gray');
+
+        const iconElement = document.getElementById('pauseButton');
+        if (iconElement) {
+            if(iconElement.innerText == "play_arrow")
+                iconElement.innerText = "pause";
+        }
+    }
+
 async alwaysOnTop(pipMessage) {
     if (!window.documentPictureInPicture) {
         alert('Sorry, your browser does not support Picture in Picture mode');
@@ -238,14 +264,25 @@ async alwaysOnTop(pipMessage) {
         height: 400,
     });
 
+    this.pause('pauseButton');
+
     let theFrame = pipWindow.document.createElement('iframe');
-    theFrame.src = window.location.href;
+    theFrame.src = window.location.href + '?miniplayer=true';
+    theFrame.style.position = 'absolute';
+    theFrame.style.top = '0';
+    theFrame.style.left = '0';
     theFrame.style.width = '100%';
     theFrame.style.height = '100%';
     theFrame.style.border = 'none';
+    theFrame.style.margin = '0';
+    theFrame.style.padding = '0';
+    theFrame.style.overflow = 'hidden';
+    pipWindow.document.body.style.margin = '0';
+    pipWindow.document.body.style.padding = '0';
+    pipWindow.document.body.style.overflow = 'hidden';
     pipWindow.document.body.appendChild(theFrame);
 
-    pipWindow.addEventListener('close', () => {
+    pipWindow.addEventListener('pagehide', () => {
         if (document.getElementById(pipMessage))
             document.getElementById(pipMessage).classList.remove('is-active');
     });
