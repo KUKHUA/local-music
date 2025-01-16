@@ -1,7 +1,7 @@
 # Local Music Player
 
-A modern web-based music player that uses the Origin Private File System (OPFS) for local music storage.
-Play your properly-tagged audio files in the browser.
+Browser-based music player designed to store and play your personal music collection directly in the browser. 
+With metadata extraction and synced lyrics, it transforms your audio files into a fully-featured music experience right in the browser.
 
 ## Features
 * Display album art and metadata
