@@ -80,3 +80,54 @@
         pulseZoom 2s ease-in-out infinite;
     text-shadow: 0 0 8px rgba(255,255,255,0.5);
 }
+
+.scroll-container {
+    position: relative;
+    overflow-y: auto;
+    word-wrap: break-word;
+    word-break: break-all;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scroll-behavior: smooth;
+}
+
+.scroll-container::-webkit-scrollbar {
+    width: 0.5rem;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+    background-color: rgba(55, 55, 55, 0.8); /* Dark mode color */
+    border-radius: 0.5rem;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+    background-color: rgba(30, 30, 30, 0.8); /* Dark mode track color */
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes onHover {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.scroll-container .scroll-with {
+    filter: opacity(0.8);
+    position: sticky;
+    bottom: 1px;
+    right: 1px;
+    float: right;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    animation: float 2s ease-in-out infinite;
+}
+
+.scroll-container .scroll-with:hover {
+    filter: opacity(1);
+    animation: onHover 2s ease-in-out infinite;
+}
