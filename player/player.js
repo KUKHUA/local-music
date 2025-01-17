@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (urlParams.get('miniplayer') === 'true') {
         document.getElementById('navDiv').remove();
         document.getElementById('coverBox').remove();
-        document.getElementById('shuffleButton').remove();
+        document.getElementById('footer').remove();
     }
 });
 
