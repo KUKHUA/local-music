@@ -57,3 +57,7 @@ function updateProgressMessage(message) {
         console.error(e.message);
     }
 }
+
+function log(message) {
+    console.log(message);
+}
