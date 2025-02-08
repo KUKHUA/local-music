@@ -135,7 +135,7 @@ class jukeBoxPlayer {
         artwork.push({
           src: image,
           sizes: `${size}x${size}`,
-          type: "image/jpeg",
+          type: "image/png",
         });
     }
     console.log(artwork);
