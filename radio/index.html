@@ -11,147 +11,15 @@
 
         <script src="../assets/script/util.js"></script>
 
-        <!--<script src="radio.js"></script>-->
-        <script>
-            class uiManager{
-                constructor(radioStationDisplay,radioPlayer){
-                    //this.radioStationDisplay = document.getElementById(radioStationDisplay);
-                    //this.radioPlayer = document.getElementById(radioPlayer);
-                    this.fsStore = new OPFSFileSystem('radio');
-                }
-
-                async init(){
-                    await this.fsStore.init();
-                    this.radioScanner = new radioScanner(this.fsStore);
-                    await this.radioScanner.init();
-                    this.radioTuner = new radioTuner();
-                    await this.radioTuner.playStream(await this.radioScanner.getRandomStation().url,this.updateMetadata);
-                }
-
-                updateMetadata(metadata){
-                    console.log(metadata);
-                }
-            }
-
-            class radioTuner{
-                constructor(){
-                    this.audio = new Audio();
-                    this.hlsAPI = new Hls();
-                }
-
-                async playStream(streamURL,metadataCallback){
-                    if(Hls.isSupported()){
-                        this.hlsAPI.loadSource(streamURL);
-                        this.hlsAPI.attachMedia(this.audio);
-                        this.hlsAPI.on(Hls.Events.MANIFEST_PARSED, function(){
-                            this.audio.play();
-                        });
-                        this.hlsAPI.on(Hls.Events.LEVEL_LOADED, function(event,data){
-                            metadataCallback(data.details);
-                        });
-
-                        if(metadataCallback){
-                            hls.on(Hls.Events.FRAG_PARSING_METADATA, (event, data) => {
-                                console.log(data,event);
-                                if (data) {
-                                    metadataCallback(data);
-                                }
-                            });
-                        }
-
-                    } else {
-                        alert('HLS not supported');
-                    }
-                }
-            }
-
-            class radioScanner{
-                constructor(fsStore){
-                    if(!fsStore)
-                        throw new Error('No file system store provided');
-                    this.fsStore = fsStore;
-                    this.serverList = [];
-                    this.server = null;
-                }
-
-                async init(){
-                    if(!await this.fsStore.hasFile('stations.json')){
-                        await this.downloadStations();
-                    } else {
-                        this.stations = await this.fsStore.getFile('stations.json');
-                        this.stations = await this.stations.getBlob();
-                        this.stations = JSON.parse(await this.stations.text());
-                        log(`Stations loaded from storage, ${this.stations.length} stations found`);
-                        await this.getServer();
-                    }
-                }
-
-                async getServer(){
-                    try {
-                        this.serverList = await fetch("https://de1.api.radio-browser.info/json/servers")
-                        this.serverList = await this.serverList.json();
-                        this.server = new URL(`https://`+this.serverList[Math.floor(Math.random() * this.serverList.length)].name);
-                    } catch (e) {
-                        log(`Error selecting server: ${e.message}`);
-                    }
-                    return this.server;
-                }
-                
-                async downloadStations(){
-                    await this.getServer();
-                    log(`Selected server: ${this.server}`);
-                    let testFetch = await fetch(this.server);
-                    if(!testFetch.ok)
-                        throw new Error(`Failed to connect to server: ${testFetch.statusText}`);
-
-                    this.stations = await fetch(new URL('json/stations/search?limit=15',this.server));
-                    if(!this.stations.ok)
-                        throw new Error(`Failed to fetch stations: ${stations.statusText}`);
-                    this.stations = await this.stations.json();
-                    this.fsStore.createFile('stations.json',new Blob([JSON.stringify(this.stations)],{type: 'application/json'}));
-                    log(`Stations downloaded and saved`);
-                }
-
-                async saveStations(){
-                    if(!this.stations)
-                        throw new Error('No stations to save');
-                    this.fsStore.createFile('stations.json',new Blob([JSON.stringify(this.stations)],{type: 'application/json'}));
-                    log(`${this.stations.length} stations saved`);
-                }
-
-                async searchStation(query){
-                    if(!this.server)
-                        await this.getServer();
-                    let search = await fetch(new URL(`json/stations/search?name=${query}&limit=10`,this.server));
-                    if(!search.ok) throw new Error(`Failed to search for stations: ${search.statusText}`);
-                    return await search.json();
-                }
-
-                async addStation(name,streamURL,icon){
-                    //name, url, favicon
-                    if(!this.stations)
-                        throw new Error('No stations loaded');
-                    this.stations.push({name: name, url: streamURL, favicon: icon});
-                    await this.saveStations();
-                }
-
-                async getRandomStation(){
-                    if(!this.stations)
-                        throw new Error('No stations loaded');
-                    return this.stations[Math.floor(Math.random() * this.stations.length)];
-                }
-            }
-        </script>
-
-        <script src="../lib/hls.min.js"></script>
+        <script src="radio.js"></script>
         <script src="../lib/filelib.js"></script>
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                window.uiManager = new uiManager('radioList', 'radioPlayer');
-                window.uiManager.init();
+                window.theuiManager = new uiManager('radioList', 'radioPlayer');
+                window.theuiManager.init();
             });
-        </script>
+    </script>
 
     </head>
     <body>
@@ -184,41 +52,29 @@
                 <div class="container">
                     <div class="columns is-centered">
 
-                        <div id="radioList" class="column is-half box mx-2 scroll-container" style="height: 70vh; width: 20vw;">
-                            <div class="box">
-                                <h2 class="title is-4">Station 1</h2>
-                                <p class="subtitle is-6">Genre: Pop</p>
-                                <button class="button is-primary">Play</button>
-                            </div>
-                            <div class="box">
-                                <h2 class="title is-4">Station 2</h2>
-                                <p class="subtitle is-6">Genre: Rock</p>
-                                <button class="button is-primary">Play</button>
-                            </div>
-                            <div class="box">
-                                <h2 class="title is-4">Station 3</h2>
-                                <p class="subtitle is-6">Genre: Jazz</p>
-                                <button class="button is-primary">Play</button>
-                            </div>
-                            <div class="box">
-                                <h2 class="title is-4">Station 4</h2>
-                                <p class="subtitle is-6">Genre: Classical</p>
-                                <button class="button is-primary">Play</button>
-                            </div>
-                            <div class="box">
-                                <h2 class="title is-4">Station 5</h2>
-                                <p class="subtitle is-6">Genre: Hip-Hop</p>
-                                <button class="button is-primary">Play</button>
-                            </div>
-
-                            <button class="button mx-2 is-responsive has-hover is-primary scroll-with">
-                                <a class="material-symbols-outlined mr-1 has-text-primary-dark">add</a>
-                            </button>
+                        <div id="radioList" class="column is-half box mx-2 scroll-container" style="height: 85vh; max-width: 20vw;">
                         </div>
 
-                        <div id="radioPlayer" class="column is-half box mx-2" style="height: 70vh; min-width: 45vw;">
+                        <div id="radioPlayer" class="column is-half box mx-2 is-centered has-text-centered" style="height: 85vh; 
+                        min-width: 45vw;">
+                            <h1 class="title is-2" id="statusMessage">Nothing playing...</h1>
 
-                        </div>      
+                            <figure id="coverBox" class="image is-square box mt-1 has-zoom mb-1" style="max-height: 40%; margin: 0 auto;">
+                                <img src="" id="coverImage" class="hideme" style="border-radius: 1em;">
+                            </figure>
+
+                            <button class="button is-size-4 mx-2 mt-2 is-responsive has-hover is-danger"
+                                onclick="window.theuiManager.stop();">
+                                <a class="material-symbols-outlined mr-1 has-text-primary-dark">stop</a>
+                            </button>
+                            <button class="button is-size-4 mx-2 mt-2 is-responsive has-hover is-info"
+                                onclick="window.theuiManager.prevStation();">
+                                <a class="material-symbols-outlined mr-1 has-text-primary-dark">skip_previous</a>
+                            </button>
+                            <button class="button is-size-4 mx-2 mt-2 is-responsive has-hover is-info"
+                                onclick="window.theuiManager.nextStation();">
+                                <a class="material-symbols-outlined mr-1 has-text-primary-dark">skip_next</a>
+                            </button>
 
                     </div> 
                 </div>
