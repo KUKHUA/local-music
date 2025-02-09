@@ -123,28 +123,34 @@ class jukeBoxPlayer {
   }
 
   async setupMediaSession(songData) {
-    // render cover sizes
-    let sizes = [64, 96, 128, 192, 256, 384, 512];
-    let artwork = [];
-    for (let size in sizes) {
-      size = sizes[size];
-      let image = dataToBlob(
-        await songData.renderCoverSize(size, songData.src.cover),
-      );
-      if (image)
-        artwork.push({
-          src: image,
-          sizes: `${size}x${size}`,
-          type: "image/png",
-        });
-    }
-    console.log(artwork);
+    /*  render cover sizes, not working on my system anyways :(
+      seems like linux/mpris has a problem with blob URLS??
+      becuase chromium is able to displsy the image in the
+      current playing audio thing
+      let sizes = [64, 96, 128, 192, 256, 384, 512];
+      let artwork = [];
+      for (let size in sizes) {
+        size = sizes[size];
+        let image = dataToBlob(
+          await songData.renderCoverSize(size, songData.src.cover),
+        );
+        if (image)
+          artwork.push({
+            src: image,
+            sizes: `${size}x${size}`,
+            type: "image/jepg",
+          });
+      }
+      console.log(artwork);
+    */
 
     navigator.mediaSession.metadata = new MediaMetadata({
       title: songData.title || "Unknown",
       artist: songData.artist || "Unknown",
       album: songData.album || "Unknown",
-      artwork: artwork,
+      artwork: [
+        { src: songData.src.cover, sizes: "512x512", type: "image/jepg" },
+      ],
     });
 
     navigator.mediaSession.setActionHandler("play", () => this.pause());
@@ -334,50 +340,5 @@ class jukeBoxPlayer {
     this.lyricText.textContent = lyric;
     if (lyric == "" || lyric == null || lyric == false)
       this.lyricText.textContent = "... ♫ ...";
-  }
-
-  async alwaysOnTop(pipMessage) {
-    if (!window.documentPictureInPicture) {
-      alert("Sorry, your browser does not support Picture in Picture mode");
-      return;
-    }
-
-    if (window.documentPictureInPicture.window) {
-      window.documentPictureInPicture.window.close();
-      if (document.getElementById(pipMessage))
-        document.getElementById(pipMessage).classList.remove("is-active");
-      return;
-    }
-
-    const pipWindow = await window.documentPictureInPicture.requestWindow({
-      width: 400,
-      height: 400,
-    });
-
-    this.pause("pauseButton");
-
-    let theFrame = pipWindow.document.createElement("iframe");
-    theFrame.src = window.location.href + "?miniplayer=true";
-    theFrame.style.position = "absolute";
-    theFrame.style.top = "0";
-    theFrame.style.left = "0";
-    theFrame.style.width = "100%";
-    theFrame.style.height = "100%";
-    theFrame.style.border = "none";
-    theFrame.style.margin = "0";
-    theFrame.style.padding = "0";
-    theFrame.style.overflow = "hidden";
-    pipWindow.document.body.style.margin = "0";
-    pipWindow.document.body.style.padding = "0";
-    pipWindow.document.body.style.overflow = "hidden";
-    pipWindow.document.body.appendChild(theFrame);
-
-    pipWindow.addEventListener("pagehide", () => {
-      if (document.getElementById(pipMessage))
-        document.getElementById(pipMessage).classList.remove("is-active");
-    });
-
-    if (document.getElementById(pipMessage))
-      document.getElementById(pipMessage).classList.add("is-active");
   }
 }

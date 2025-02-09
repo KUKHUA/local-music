@@ -13,10 +13,11 @@
 
         <script src="radio.js"></script>
         <script src="../lib/filelib.js"></script>
+        <script src="../lib/hls.min.js"></script>
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                window.theuiManager = new uiManager('radioList', 'radioPlayer');
+                window.theuiManager = new uiManager('radioList', 'radioPlayer','statusMessage','coverImage');
                 window.theuiManager.init();
             });
     </script>
@@ -43,8 +44,12 @@
             </div>
 
 
-            <div class="navbar-end">
 
+            <div class="navbar-end">
+                <button id="pipButton" style="border-radius: 1em;" class="button has-text-grey-lighter is-size-5
+               mx-2 is-outlined is-responsive has-hover is-hidden-mobile" onclick="window.theuiManager.radioScanner.checkStations();">
+                    <a class="material-symbols-outlined mr-1">refresh</a> Check Stations
+                </button>
             </div>
         </div>
 
@@ -55,8 +60,8 @@
                         <div id="radioList" class="column is-half box mx-2 scroll-container" style="height: 85vh; max-width: 20vw;">
                         </div>
 
-                        <div id="radioPlayer" class="column is-half box mx-2 is-centered has-text-centered" style="height: 85vh; 
-                        min-width: 45vw;">
+                        <div id="radioPlayer" class="column is-half box mx-2 is-centered has-text-centered" style="height: 85vh;
+                        min-width: 50vw;">
                             <h1 class="title is-2" id="statusMessage">Nothing playing...</h1>
 
                             <figure id="coverBox" class="image is-square box mt-1 has-zoom mb-1" style="max-height: 40%; margin: 0 auto;">
@@ -67,16 +72,26 @@
                                 onclick="window.theuiManager.stop();">
                                 <a class="material-symbols-outlined mr-1 has-text-primary-dark">stop</a>
                             </button>
+
                             <button class="button is-size-4 mx-2 mt-2 is-responsive has-hover is-info"
                                 onclick="window.theuiManager.prevStation();">
                                 <a class="material-symbols-outlined mr-1 has-text-primary-dark">skip_previous</a>
                             </button>
+
                             <button class="button is-size-4 mx-2 mt-2 is-responsive has-hover is-info"
                                 onclick="window.theuiManager.nextStation();">
                                 <a class="material-symbols-outlined mr-1 has-text-primary-dark">skip_next</a>
                             </button>
 
-                    </div> 
+                            <br>
+
+                            <button class="button is-size-4 mx-2 mt-2 is-responsive has-hover is-primary"
+                                onclick="window.theuiManager.findMore();">
+                                <a class="material-symbols-outlined mr-1 has-text-primary-dark">search<a>
+                            </button>
+
+
+                    </div>
                 </div>
         </section>
 
@@ -90,8 +105,8 @@
                 </a>
               </p>
               <p>
-                Built with <a href="https://bulma.io" class="has-text-info">Bulma</a> 
-                (<a href="https://github.com/jgthms/bulma/blob/master/LICENSE" class="has-text-info">MIT</a>) and 
+                Built with <a href="https://bulma.io" class="has-text-info">Bulma</a>
+                (<a href="https://github.com/jgthms/bulma/blob/master/LICENSE" class="has-text-info">MIT</a>) and
                 <a href="https://github.com/aadsm/jsmediatags" class="has-text-info">JSMediaTags</a>
                 (<a href="https://github.com/aadsm/jsmediatags/blob/master/LICENSE" class="has-text-info">BSD-3</a>)
               </p>

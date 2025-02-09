@@ -275,7 +275,8 @@ class song {
       const img = new Image();
       img.onload = () => {
         canvas.getContext("2d").drawImage(img, 0, 0, size, size);
-        resolve(canvas.toDataURL());
+        // Specify JPEG format and quality (0.9 = 90% quality)
+        resolve(canvas.toDataURL("image/jpeg", 0.9));
       };
       img.src = imageURL;
     });
