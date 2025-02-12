@@ -382,3 +382,4 @@ class radioScanner {
     return await search.json();
   }
 }
+]\\
